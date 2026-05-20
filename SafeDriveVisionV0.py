@@ -15,27 +15,65 @@ BLUE = (255, 0, 0)
 GREEN = (0, 255, 0)
 
 pygame.mixer.init()
-current_time = time.time()
+# current_time = time.time()
 
-# audio modules hemanth
+# # audio modules hemanth
+# sounds = {
+#     'eye': ('./eye_alert.mp3', 10),          # "Wake up!"
+#     'look': ('./look_ahead.mp3', 10),        # "Look ahead!"
+#     'rest': ('./take_rest.mp3', 15),         # "Please take rest"
+#     'phone': ('./phone_alert.mp3', 15),      # "Don't use phone"
+#     'welcome': ('./welcome.mp3', 0)          # "System started"
+# }
+
+
 sounds = {
-    'eye': ('./eye_alert.mp3', 10),          # "Wake up!"
-    'look': ('./look_ahead.mp3', 10),        # "Look ahead!"
-    'rest': ('./take_rest.mp3', 15),         # "Please take rest"
-    'phone': ('./phone_alert.mp3', 15),      # "Don't use phone"
-    'welcome': ('./welcome.mp3', 0)          # "System started"
+    'eye': ('./eye_alert.mp3', 10),
+    'look': ('./look_ahead.mp3', 10),
+    'rest': ('./take_rest.mp3', 15), 
+    'phone': ('./phone_alert.mp3', 15),
+    'welcome': ('./welcomeengl.mp3', 0)
 }
+
 
 # Last time the sound was played
 last_played = {key: 0 for key in sounds}
 
+# def play_sound(sound_key):
+#     audio_file, delay = sounds[sound_key]
+#     current_time = time.time()
+#     if current_time - last_played[sound_key] > delay:
+#         pygame.mixer.music.load(audio_file)
+#         pygame.mixer.music.play()
+#         last_played[sound_key] = current_time  # Mise à jour du timestamp après lecture
+
+
+
+
+
 def play_sound(sound_key):
-    audio_file, delay = sounds[sound_key]
-    current_time = time.time()
-    if current_time - last_played[sound_key] > delay:
-        pygame.mixer.music.load(audio_file)
-        pygame.mixer.music.play()
-        last_played[sound_key] = current_time  # Mise à jour du timestamp après lecture
+    try:
+        audio_file, delay = sounds[sound_key]
+
+        current_time = time.time()
+
+        if current_time - last_played[sound_key] > delay:
+
+            if os.path.exists(audio_file):
+
+                print(f"Playing sound: {sound_key}")
+
+                pygame.mixer.music.load(audio_file)
+                pygame.mixer.music.play()
+
+                last_played[sound_key] = current_time
+
+            else:
+                print(f"[ERROR] Audio file not found: {audio_file}")
+
+    except Exception as e:
+        print(f"[ERROR] Sound issue: {e}")
+
 
 def sound_thread(sound_key):
     thread = threading.Thread(target=play_sound, args=(sound_key,))
@@ -165,7 +203,6 @@ face_detected = False
 
 # Start the welcome sound
 sound_thread('welcome')
-sound_thread('welcome_eng')
 
 while True:
     ret, img = cap.read()
@@ -186,6 +223,7 @@ while True:
             x1, y1, x2, y2, conf = int(detection[0]), int(detection[1]), int(detection[2]), int(detection[3]), detection[4]
             cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
             cv2.putText(img, f'Cell Phone {conf:.2f}', (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            current_time = time.strftime('%H:%M:%S')
             print("driver is using cell phone ", current_time)
             COUNTER2 += 1
             if COUNTER2 >= 3:
@@ -221,18 +259,18 @@ while True:
                 ], dtype="double")
 
                 camera_matrix = get_camera_matrix(img.shape)
-                dist_coeffs = np.zeros((4, 1))  # Aucune distorsion
+                dist_coeffs = np.zeros((4, 1))  # No distortion
 
-                # Effectuer solvePnP
+                #  Perform solvePnP
                 success, rotation_vector, translation_vector = cv2.solvePnP(model_points, image_points, camera_matrix, dist_coeffs)
                 if success:
-                    # Projeter les points 3D dans l'espace 2D
+                 # Project 3D points into 2D space   
                     projected_points, _ = cv2.projectPoints(model_points, rotation_vector, translation_vector, camera_matrix, dist_coeffs)
                     '''for point in projected_points:
                         p = (int(point[0][0]), int(point[0][1]))
                         #cv2.circle(img, p, 3, (0, 255, 0), -1)  # Dessiner en vert
 '''
-        # Dessiner les points de repère
+        # To Draw facial landmark points
             for point in landmarks_points:
                 cv2.circle(img, (point[0], point[1]), 2, (255, 255, 255), -1)
             left_eye = landmarks_points[36:42]
@@ -264,11 +302,11 @@ while True:
             cv2.putText(img, f'Head Tilt: {head_tilt_degree[0]:.2f} degrees', (10, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)
             cv2.line(img, start_point, end_point, (0, 255, 0), 2)
            
-            if 75 > head_angle and head_angle > 110 :
+            if head_angle < 75 or head_angle > 110:
                 cv2.putText(img, "Look ahead!", (x, y - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
                 COUNTER3 += 1
                 if COUNTER3 >= 6:  
-                    sound_thread("regarder")          
+                    sound_thread("look")          
                     cv2.putText(img, "Look ahead!", (x, y - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
                     COUNTER3 = 0
                  
@@ -293,7 +331,7 @@ while True:
                         COUNTER1 = 0
                         repeat_counter = 0
             if mar > 0.6:
-                        sound_thread("reposer")
+                        sound_thread("rest")
                         cv2.putText(img, "Yawning!", (x, y - 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
             head_tilt_degree, start_point, end_point, end_point_alt = getHeadTiltAndCoords(size, image_points, frame_height)
 
