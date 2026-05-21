@@ -201,9 +201,18 @@ function App() {
 
           <div className="h-[500px] rounded-3xl bg-black border-2 border-cyan-400 flex items-center justify-center">
 
-            <p className="text-gray-500 text-2xl">
+            {/* <p className="text-gray-500 text-2xl">
               Camera Feed Will Appear Here
-            </p>
+            </p> */}
+
+
+        
+<img
+  src="http://127.0.0.1:5000/video_feed"
+  alt="Live Feed"
+  className="w-full h-full object-cover rounded-3xl"
+/>
+
 
           </div>
 
