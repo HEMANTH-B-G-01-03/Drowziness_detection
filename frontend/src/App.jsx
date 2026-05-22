@@ -159,6 +159,15 @@
 
 
 
+// import {
+//   FaExclamationTriangle,
+//   FaPhone,
+//   FaEye,
+//   FaCarCrash,
+// } from "react-icons/fa";
+
+import { useEffect, useState } from "react";
+
 import {
   FaExclamationTriangle,
   FaPhone,
@@ -167,13 +176,40 @@ import {
 } from "react-icons/fa";
 
 function App() {
+
+  const [status, setStatus] = useState({
+    alert: "Normal",
+    risk: 10,
+    eye_status: "Alert",
+    phone: "Not Detected",
+  });
+
+  // 🔥 FETCH LIVE STATUS FROM BACKEND
+  useEffect(() => {
+
+    const interval = setInterval(() => {
+
+      fetch("http://127.0.0.1:5000/status")
+        .then((res) => res.json())
+        .then((data) => {
+          setStatus(data);
+        });
+
+    }, 1000);
+
+    return () => clearInterval(interval);
+
+  }, []);
+
   return (
+
     <div className="min-h-screen bg-slate-950 text-white p-6">
 
       {/* HEADER */}
       <div className="flex justify-between items-center mb-8">
 
         <div>
+
           <h1 className="text-5xl font-bold text-cyan-400">
             AI Driver Monitoring System
           </h1>
@@ -181,38 +217,47 @@ function App() {
           <p className="text-gray-400 mt-3 text-lg">
             Real-Time Drowsiness & Distraction Detection
           </p>
+
         </div>
 
-        <div className="bg-red-500 px-5 py-3 rounded-2xl shadow-2xl font-bold text-lg animate-pulse">
-          HIGH RISK
+        {/* LIVE RISK BADGE */}
+        <div
+          className={`px-5 py-3 rounded-2xl shadow-2xl font-bold text-lg animate-pulse
+          ${status.risk >= 70
+              ? "bg-red-500"
+              : status.risk >= 40
+                ? "bg-yellow-500"
+                : "bg-green-500"
+            }`}
+        >
+
+          {status.risk >= 70
+            ? "HIGH RISK"
+            : status.risk >= 40
+              ? "MEDIUM RISK"
+              : "SAFE"}
+
         </div>
 
       </div>
 
-      {/* GRID */}
+      {/* MAIN GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {/* CAMERA */}
+        {/* CAMERA SECTION */}
         <div className="lg:col-span-2 bg-slate-900 rounded-3xl p-5 border border-cyan-500 shadow-2xl">
 
           <h2 className="text-3xl font-bold text-cyan-300 mb-5">
             Live Monitoring
           </h2>
 
-          <div className="h-[500px] rounded-3xl bg-black border-2 border-cyan-400 flex items-center justify-center">
+          <div className="h-[500px] rounded-3xl bg-black border-2 border-cyan-400 overflow-hidden">
 
-            {/* <p className="text-gray-500 text-2xl">
-              Camera Feed Will Appear Here
-            </p> */}
-
-
-        
-<img
-  src="http://127.0.0.1:5000/video_feed"
-  alt="Live Feed"
-  className="w-full h-full object-cover rounded-3xl"
-/>
-
+            <img
+              src="http://127.0.0.1:5000/video_feed"
+              alt="Live Feed"
+              className="w-full h-full object-cover rounded-3xl"
+            />
 
           </div>
 
@@ -221,7 +266,7 @@ function App() {
         {/* RIGHT PANEL */}
         <div className="space-y-6">
 
-          {/* ALERT */}
+          {/* ALERT CARD */}
           <div className="bg-slate-900 rounded-3xl p-5 border border-red-500 shadow-2xl">
 
             <div className="flex items-center gap-3 mb-4">
@@ -234,13 +279,13 @@ function App() {
 
             </div>
 
-            <p className="text-red-400 text-xl">
-              Driver Using Phone
+            <p className="text-red-400 text-xl font-semibold">
+              {status.alert}
             </p>
 
           </div>
 
-          {/* RISK */}
+          {/* RISK SCORE */}
           <div className="bg-slate-900 rounded-3xl p-5 border border-yellow-500 shadow-2xl">
 
             <h2 className="text-2xl font-bold mb-4">
@@ -249,56 +294,73 @@ function App() {
 
             <div className="w-full h-6 bg-slate-700 rounded-full overflow-hidden">
 
-              <div className="h-6 w-[75%] bg-yellow-400 rounded-full"></div>
+              <div
+                className="h-6 bg-yellow-400 rounded-full transition-all duration-500"
+                style={{ width: `${status.risk}%` }}
+              ></div>
 
             </div>
 
             <p className="mt-4 text-yellow-300 text-lg font-semibold">
-              75% Risk Detected
+
+              {status.risk}% Risk Detected
+
             </p>
 
           </div>
 
-          {/* STATUS */}
+          {/* STATUS BOXES */}
           <div className="space-y-4">
 
+            {/* EYE STATUS */}
             <div className="bg-slate-900 rounded-3xl p-5 border border-cyan-500 shadow-2xl flex items-center gap-4">
 
               <FaEye className="text-cyan-400 text-4xl" />
 
               <div>
+
                 <p className="text-gray-400">
                   Eye Status
                 </p>
 
                 <h2 className="text-2xl font-bold text-cyan-300">
-                  Drowsy
+
+                  {status.eye_status}
+
                 </h2>
+
               </div>
 
             </div>
 
+            {/* PHONE STATUS */}
             <div className="bg-slate-900 rounded-3xl p-5 border border-purple-500 shadow-2xl flex items-center gap-4">
 
               <FaPhone className="text-purple-400 text-4xl" />
 
               <div>
+
                 <p className="text-gray-400">
                   Phone Usage
                 </p>
 
                 <h2 className="text-2xl font-bold text-purple-300">
-                  Detected
+
+                  {status.phone}
+
                 </h2>
+
               </div>
 
             </div>
 
+            {/* ACCURACY */}
             <div className="bg-slate-900 rounded-3xl p-5 border border-green-500 shadow-2xl flex items-center gap-4">
 
               <FaCarCrash className="text-green-400 text-4xl" />
 
               <div>
+
                 <p className="text-gray-400">
                   Model Accuracy
                 </p>
@@ -306,6 +368,7 @@ function App() {
                 <h2 className="text-2xl font-bold text-green-300">
                   99.94%
                 </h2>
+
               </div>
 
             </div>
@@ -317,8 +380,8 @@ function App() {
       </div>
 
     </div>
+
   );
 }
 
 export default App;
-
