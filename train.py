@@ -423,7 +423,7 @@ torch.backends.cudnn.benchmark = True
 
 # 📂 Paths
 train_dir = "datasets/train"
-val_dir = "datasets/val"
+val_dir = "datasets/val11"
 
 # 🔥 Data Augmentation
 transform_train = transforms.Compose([
@@ -452,9 +452,11 @@ print("Classes:", class_names)
 
 # 🧠 Model
 model = models.mobilenet_v2(weights="DEFAULT")
-model.classifier[1] = nn.Sequential(
+for param in model.features.parameters():
+    param.requires_grad = False
+model.classifier = nn.Sequential(
     nn.Dropout(0.5),
-    nn.Linear(model.last_channel, len(class_names))
+    nn.Linear(model.last_channel, 3)
 )
 
 # 🚀 Device
@@ -466,7 +468,7 @@ model = model.to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0003)
 
-epochs = 12
+epochs = 6
 best_val_loss = float('inf')
 
 train_losses = []
