@@ -366,7 +366,7 @@ function App() {
                 </p>
 
                 <h2 className="text-2xl font-bold text-green-300">
-                  99.94%
+                  98.2%
                 </h2>
 
               </div>
