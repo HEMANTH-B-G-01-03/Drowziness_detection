@@ -865,3 +865,402 @@ cv2.destroyAllWindows()
 #             COUNTER3 = 0
 
 #     return img, status_data
+
+
+
+
+# second optimization
+
+# def process_frame(img):
+
+#     global COUNTER1
+#     global COUNTER2
+#     global COUNTER3
+#     global repeat_counter
+
+#     status_data = {
+#         "alert": "Normal",
+#         "risk": 10,
+#         "eye_status": "Alert",
+#         "phone": "Not Detected",
+#         "ear": 0,
+#         "mar": 0,
+#         "head_angle": 0,
+#         "head_tilt": 0
+#     }
+
+#     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+#     faces = detector(gray,1)
+
+#     if len(faces) == 0:
+
+#         status_data["alert"] = "Face Not Found"
+
+#         sound_thread("look")
+
+#     # -------------------------
+#     # YOLO PHONE DETECTION
+#     # -------------------------
+
+#     results = model(img)
+
+#     detections = results[0].boxes.data
+
+#     for detection in detections:
+
+#         if int(detection[5]) == 67:
+
+#             x1, y1, x2, y2 = (
+#                 int(detection[0]),
+#                 int(detection[1]),
+#                 int(detection[2]),
+#                 int(detection[3])
+#             )
+
+#             conf = float(detection[4])
+
+#             cv2.rectangle(
+#                 img,
+#                 (x1, y1),
+#                 (x2, y2),
+#                 (0, 255, 0),
+#                 2
+#             )
+
+#             cv2.putText(
+#                 img,
+#                 f"Cell Phone {conf:.2f}",
+#                 (x1, y1 - 10),
+#                 cv2.FONT_HERSHEY_SIMPLEX,
+#                 0.6,
+#                 (0, 255, 0),
+#                 2
+#             )
+
+#             status_data["phone"] = "Detected"
+#             status_data["alert"] = "Phone Detected"
+#             status_data["risk"] = 80
+
+#             COUNTER2 += 1
+
+#             if COUNTER2 >= 3:
+
+#                 sound_thread("phone")
+
+#                 COUNTER2 = 0
+
+#     # -------------------------
+#     # FACE DETECTION
+#     # -------------------------
+
+#     for face in faces:
+
+#         landmarks = predictor(gray, face)
+
+#         landmarks_points = np.array(
+#             [(p.x, p.y) for p in landmarks.parts()]
+#         )
+
+#         x = face.left()
+#         y = face.top()
+#         w = face.width()
+#         h = face.height()
+
+#         cv2.rectangle(
+#             img,
+#             (x, y),
+#             (x + w, y + h),
+#             (255, 0, 0),
+#             2
+#         )
+
+#         # -------------------------
+#         # BIGGER LANDMARK POINTS
+#         # -------------------------
+
+#         for point in landmarks_points:
+
+#             cv2.circle(img,(point[0],point[1]),4,(255,255,255),-1)
+
+#         # -------------------------
+#         # EYE CONTOURS
+#         # -------------------------
+
+#         left_eye = landmarks_points[36:42]
+#         right_eye = landmarks_points[42:48]
+
+#         left_eyeHull = cv2.convexHull(left_eye)
+#         right_eyeHull = cv2.convexHull(right_eye)
+
+#         cv2.drawContours(
+#             img,
+#             [left_eyeHull],
+#             -1,
+#             (255, 255, 255),
+#             1
+#         )
+
+#         cv2.drawContours(
+#             img,
+#             [right_eyeHull],
+#             -1,
+#             (255, 255, 255),
+#             1
+#         )
+
+#         # -------------------------
+#         # MOUTH CONTOUR
+#         # -------------------------
+
+#         mouth = landmarks_points[48:68]
+
+#         mouthHull = cv2.convexHull(mouth)
+
+#         cv2.drawContours(
+#             img,
+#             [mouthHull],
+#             -1,
+#             (0, 255, 0),
+#             1
+#         )
+
+#         # -------------------------
+#         # EAR
+#         # -------------------------
+
+#         ear = (
+#             eye_aspect_ratio(left_eye)
+#             + eye_aspect_ratio(right_eye)
+#         ) / 2.0
+
+#         status_data["ear"] = round(float(ear), 2)
+
+#         # -------------------------
+#         # MAR
+#         # -------------------------
+
+#         mar = mouth_aspect_ratio(mouth)
+
+#         status_data["mar"] = round(float(mar), 2)
+
+#         # -------------------------
+#         # NOSE RATIO
+#         # -------------------------
+
+#         nose_points = [
+#             landmarks_points[27],
+#             landmarks_points[30],
+#             landmarks_points[33]
+#         ]
+
+#         nar = nose_aspect_ratio(nose_points)
+
+#         # -------------------------
+#         # HEAD ANGLE
+#         # -------------------------
+
+#         eye_left = landmarks_points[36]
+#         eye_right = landmarks_points[45]
+#         nose_tip = landmarks_points[33]
+
+#         head_angle = calculate_head_angle(
+#             np.array(eye_left),
+#             np.array(eye_right),
+#             np.array(nose_tip)
+#         )
+
+#         status_data["head_angle"] = round(
+#             float(head_angle),
+#             2
+#         )
+
+#         # -------------------------
+#         # HEAD TILT
+#         # -------------------------
+
+#         image_points = np.array([
+#             landmarks_points[30],
+#             landmarks_points[36],
+#             landmarks_points[45],
+#             landmarks_points[48],
+#             landmarks_points[54],
+#             landmarks_points[8]
+#         ], dtype="double")
+
+#         try:
+
+#             size = img.shape
+
+#             frame_height = img.shape[0]
+
+#             (
+#                 head_tilt_degree,
+#                 start_point,
+#                 end_point,
+#                 end_point_alt
+#             ) = getHeadTiltAndCoords(
+#                 size,
+#                 image_points,
+#                 frame_height
+#             )
+
+#             status_data["head_tilt"] = round(
+#                 float(head_tilt_degree[0]),
+#                 2
+#             )
+
+#             cv2.line(
+#                 img,
+#                 start_point,
+#                 end_point,
+#                 (255, 0, 0),
+#                 2
+#             )
+
+#             cv2.line(
+#                 img,
+#                 start_point,
+#                 end_point_alt,
+#                 (0, 0, 255),
+#                 2
+#             )
+
+#             cv2.putText(
+#                 img,
+#                 f"Tilt:{head_tilt_degree[0]:.1f}",
+#                 (10, 120),
+#                 cv2.FONT_HERSHEY_SIMPLEX,
+#                 0.6,
+#                 (255, 255, 0),
+#                 2
+#             )
+
+#         except Exception as e:
+#            print("HEAD TILT ERROR:", e)
+
+#         # -------------------------
+#         # DISPLAY VALUES
+#         # -------------------------
+
+#         cv2.putText(
+#             img,
+#             f"EAR: {ear:.2f}",
+#             (10, 30),
+#             cv2.FONT_HERSHEY_SIMPLEX,
+#             0.7,
+#             (0, 255, 255),
+#             2
+#         )
+
+#         cv2.putText(
+#             img,
+#             f"MAR: {mar:.2f}",
+#             (10, 60),
+#             cv2.FONT_HERSHEY_SIMPLEX,
+#             0.7,
+#             (0, 255, 255),
+#             2
+#         )
+
+#         cv2.putText(
+#             img,
+#             f"Head Angle: {head_angle:.2f}",
+#             (10, 90),
+#             cv2.FONT_HERSHEY_SIMPLEX,
+#             0.7,
+#             (0, 255, 255),
+#             2
+#         )
+
+#         # -------------------------
+#         # EYES CLOSED
+#         # -------------------------
+
+#         if ear < 0.29:
+
+#             status_data["eye_status"] = "Drowsy"
+#             status_data["alert"] = "Eyes Closed"
+#             status_data["risk"] = 90
+
+#             COUNTER1 += 1
+
+#             cv2.putText(
+#                 img,
+#                 "Eyes Closed!",
+#                 (x, y - 20),
+#                 cv2.FONT_HERSHEY_SIMPLEX,
+#                 0.7,
+#                 (0, 0, 255),
+#                 2
+#             )
+
+#             if COUNTER1 >= 4:
+
+#                 sound_thread("eye")
+
+#                 repeat_counter += 1
+
+#                 COUNTER1 = 0
+
+#                 if repeat_counter >= 3:
+
+#                     sound_thread("rest")
+
+#                     repeat_counter = 0
+
+#         else:
+
+#             COUNTER1 = 0
+
+#         # -------------------------
+#         # YAWNING
+#         # -------------------------
+
+#         if mar > 0.6:
+
+#             status_data["alert"] = "Yawning"
+#             status_data["risk"] = 70
+
+#             cv2.putText(
+#                 img,
+#                 "Yawning!",
+#                 (x, y - 50),
+#                 cv2.FONT_HERSHEY_SIMPLEX,
+#                 0.7,
+#                 (0, 0, 255),
+#                 2
+#             )
+
+#         # -------------------------
+#         # LOOK AHEAD
+#         # -------------------------
+
+#         if head_angle < 75 or head_angle > 110:
+
+#             status_data["alert"] = "Look Ahead"
+#             status_data["risk"] = 60
+
+#             COUNTER3 += 1
+
+#             cv2.putText(
+#                 img,
+#                 "Look Ahead!",
+#                 (x, y - 80),
+#                 cv2.FONT_HERSHEY_SIMPLEX,
+#                 0.7,
+#                 (0, 0, 255),
+#                 2
+#             )
+
+#             if COUNTER3 >= 6:
+
+#                 sound_thread("look")
+
+#                 COUNTER3 = 0
+
+#         else:
+
+#             COUNTER3 = 0
+
+#     return img, status_data
